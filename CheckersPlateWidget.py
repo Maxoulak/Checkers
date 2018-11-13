@@ -4,17 +4,17 @@ from PyQt5.QtCore import QSize, Qt, QRectF, QPoint
 from PyQt5.QtGui import QImage, QPainter, QPen, QColor, QPixmap
 from PyQt5.QtWidgets import QWidget
 
+from Game import Game
 from Square import Square
 
 class CheckersPlateWidget(QWidget):
-    NB_PLATE_SQUARES = 8
     MARGIN = 10
 
     def __init__(self, size):
         super().__init__()
 
         self.pieceSelected = QPoint(-1, -1)
-        self.squarePossibility = []
+        self.squarePossibilities = []
         self.size = min(size.width(), size.height())
         self.setFixedSize(self.size, self.size)
         self.plate = []
@@ -24,7 +24,7 @@ class CheckersPlateWidget(QWidget):
         self.initUI()
 
     def initSquareDimension(self):
-        self.squareDimension = self.size / self.NB_PLATE_SQUARES
+        self.squareDimension = self.size / Game.NB_PLATE_SQUARES
 
     def initUI(self):
         self.image = QImage(QSize(self.size, self.size), QImage.Format_RGB32)
@@ -32,9 +32,9 @@ class CheckersPlateWidget(QWidget):
         self.drawPlate()
 
     def initPlate(self):
-        for i in range(0, self.NB_PLATE_SQUARES):
+        for i in range(0, Game.NB_PLATE_SQUARES):
             self.plate.append([])
-            for j in range(0, self.NB_PLATE_SQUARES):
+            for j in range(0, Game.NB_PLATE_SQUARES):
                 self.plate[i].append({})
                 compare = 0 if i % 2 == 0 else 1
                 if j % 2 == compare:
@@ -55,10 +55,10 @@ class CheckersPlateWidget(QWidget):
                     self.plate[i][j]["player"] = 0
 
     def drawPlate(self):
-        for y in range(0, self.NB_PLATE_SQUARES):
-            for x in range(0, self.NB_PLATE_SQUARES):
+        for y in range(0, Game.NB_PLATE_SQUARES):
+            for x in range(0, Game.NB_PLATE_SQUARES):
                 pieceSelected = True if x == self.pieceSelected.x() and y == self.pieceSelected.y() else False
-                squarePossibility = True if self.isPointInArray(self.squarePossibility, QPoint(x, y)) else False
+                squarePossibility = True if Game.isPointInArray(self.squarePossibilities, QPoint(x, y)) else False
                 if self.plate[y][x]["square"] == Square.BLACK:
                     self.drawSquare(x, y, Qt.gray, squarePossibility)
                 else:
@@ -107,30 +107,35 @@ class CheckersPlateWidget(QWidget):
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             x, y = self.getSelectedSquare(event)
-            self.squarePossibility = []
-            self.pieceSelected = QPoint(x, y)
-            #if self.plate[y][x]["piece"] != Square.EMPTY:
-            #    self.searchPossibility()
+            pos = QPoint(x, y)
+            if self.pieceSelected.x() != -1 and self.pieceSelected.y() != -1\
+                    and Game.isPointInArray(self.squarePossibilities, pos):
+                self.plate[y][x]["piece"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"]
+                self.plate[y][x]["player"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"]
+                self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"] = Square.EMPTY
+                self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"] = 0
+                self.pieceSelected = QPoint(-1, -1)
+                self.squarePossibilities = []
+            else:
+                self.pieceSelected = QPoint(-1, -1)
+                self.squarePossibilities = []
+                if self.plate[y][x]["piece"] != Square.EMPTY:
+                    self.pieceSelected = pos
+                    self.squarePossibilities = Game.searchPossibility(self.plate, self.pieceSelected)
             self.drawPlate()
             self.update()
 
     def getSelectedSquare(self, event):
-        for y in range(0, self.NB_PLATE_SQUARES):
+        for y in range(0, Game.NB_PLATE_SQUARES):
             posYMin = y * self.squareDimension
             posYMax = y * self.squareDimension + self.squareDimension
             if posYMin <= event.pos().y() <= posYMax:
-                for x in range(0, self.NB_PLATE_SQUARES):
+                for x in range(0, Game.NB_PLATE_SQUARES):
                     posXMin = x * self.squareDimension
                     posXMax = x * self.squareDimension + self.squareDimension
                     if posXMin <= event.pos().x() <= posXMax:
                         return x, y
         return -1, -1
-
-    def isPointInArray(self, array, pointToSearch):
-        for point in array:
-            if point.x() == pointToSearch.x() and point.y() == pointToSearch.y():
-                return True
-        return False
 
     def printPlate(self, piece):
         for row in self.plate:
