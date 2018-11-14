@@ -5,36 +5,44 @@ from Square import Square
 class Game:
     NB_PLATE_SQUARES = 8
 
-    @staticmethod
-    def searchPossibility(plate, pieceSelected):
+    def __init__(self, plate):
+        self.plate = plate
+        self.turnJ1 = True
+
+    def toggleTurn(self):
+        self.turnJ1 = False if self.turnJ1 else True
+
+    def isTurnJ1(self):
+        return self.turnJ1
+
+    def setPlate(self, plate):
+        self.plate = plate
+
+    def searchPossibility(self, pieceSelected):
         x = pieceSelected.x()
         y = pieceSelected.y()
         possibilities = []
-        points = []
-        if plate[y][x]["player"] == 1:
+        if self.turnJ1:
             points = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1)]
         else:
             points = [QPoint(x - 1, y - 1), QPoint(x - 1, y + 1)]
         for point in points:
-            if Game.isValidSquare(plate, point):
+            if self.isValidSquare(point):
                 possibilities.append(point)
         return possibilities
 
-    @staticmethod
-    def isValidSquare(plate, point):
+    def isValidSquare(self, point):
         if 0 <= point.x() < Game.NB_PLATE_SQUARES and 0 <= point.y() < Game.NB_PLATE_SQUARES:
-            if Game.isEmptySquare(plate, point):
+            if self.isEmptySquare(point):
                 return True
         return False
 
-    @staticmethod
-    def isEmptySquare(plate, point):
-        if plate[point.y()][point.x()]["piece"] == Square.EMPTY:
+    def isEmptySquare(self, point):
+        if self.plate[point.y()][point.x()]["piece"] == Square.EMPTY:
             return True
         return False
 
-    @staticmethod
-    def isPointInArray(array, pointToSearch):
+    def isPointInArray(self, array, pointToSearch):
         for point in array:
             if point.x() == pointToSearch.x() and point.y() == pointToSearch.y():
                 return True

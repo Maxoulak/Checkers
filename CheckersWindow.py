@@ -24,7 +24,10 @@ class CheckersWindow(QMainWindow):
 
 # Main Function
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = CheckersWindow()
-    window.show()
-    app.exec()
+    try:
+        app = QApplication(sys.argv)
+        window = CheckersWindow()
+        window.show()
+        app.exec()
+    except Exception as e:
+        print(e)
