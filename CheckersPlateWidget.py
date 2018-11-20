@@ -109,13 +109,21 @@ class CheckersPlateWidget(QWidget):
         if event.button() == Qt.LeftButton:
             x, y = self.getSelectedSquare(event)
             pos = QPoint(x, y)
-            # Clique sur une possibilité
+            # Case cliquée + Clique sur une possibilité
             if self.pieceSelected.x() != -1 and self.pieceSelected.y() != -1\
                     and self.game.isPointInArray(self.squarePossibilities, pos):
+                # Move
                 self.plate[y][x]["piece"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"]
                 self.plate[y][x]["player"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"]
                 self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"] = Square.EMPTY
                 self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"] = 0
+                # Hungry mode
+                if abs(x - self.pieceSelected.x()) == 2:
+                    print("toto")
+                    deadY, deadX = self.getPointBetween(pos)
+                    self.plate[deadY][deadX]["piece"] = Square.EMPTY
+                    self.plate[deadY][deadX]["player"] = 0
+                    print(str(deadX) + " " + str(deadY))
                 self.pieceSelected = QPoint(-1, -1)
                 self.squarePossibilities = []
                 self.game.toggleTurn()
@@ -130,6 +138,15 @@ class CheckersPlateWidget(QWidget):
             self.game.setPlate(self.plate)
             self.drawPlate()
             self.update()
+
+    def getPointBetween(self, toPoint):
+        if self.game.isTurnJ1():
+            if self.pieceSelected.y() - toPoint.y() > 0:
+                return self.pieceSelected.y() - 1, self.pieceSelected.x() + 1
+            return self.pieceSelected.y() + 1, self.pieceSelected.x() + 1
+        if self.pieceSelected.y() - toPoint.y() > 0:
+            return self.pieceSelected.y() - 1, self.pieceSelected.x() - 1
+        return self.pieceSelected.y() + 1, self.pieceSelected.x() - 1
 
     def getSelectedSquare(self, event):
         for y in range(0, Game.NB_PLATE_SQUARES):
