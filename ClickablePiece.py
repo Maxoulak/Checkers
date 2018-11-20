@@ -15,3 +15,6 @@ class ClickablePiece:
 
     def getPossibilities(self):
         return self.possibilities
+
+    def getNbPossibilities(self):
+        return len(self.possibilities)

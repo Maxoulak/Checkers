@@ -33,33 +33,33 @@ class CheckersPlateWidget(QWidget):
         self.drawPlate()
 
     def initPlate(self):
-        for i in range(0, Game.NB_PLATE_SQUARES):
+        for y in range(0, Game.NB_PLATE_SQUARES):
             self.plate.append([])
-            for j in range(0, Game.NB_PLATE_SQUARES):
-                self.plate[i].append({})
-                compare = 0 if i % 2 == 0 else 1
-                if j % 2 == compare:
-                    self.plate[i][j]["square"] = Square.WHITE
-                    self.plate[i][j]["piece"] = Square.EMPTY
-                    self.plate[i][j]["player"] = 0
-                elif j < 3:
-                    self.plate[i][j]["square"] = Square.BLACK
-                    self.plate[i][j]["piece"] = Square.WHITE
-                    self.plate[i][j]["player"] = 1
-                elif j > 4:
-                    self.plate[i][j]["square"] = Square.BLACK
-                    self.plate[i][j]["piece"] = Square.BLACK
-                    self.plate[i][j]["player"] = 2
+            for x in range(0, Game.NB_PLATE_SQUARES):
+                self.plate[y].append({})
+                compare = 0 if y % 2 == 0 else 1
+                if x % 2 == compare:
+                    self.plate[y][x]["square"] = Square.WHITE
+                    self.plate[y][x]["piece"] = Square.EMPTY
+                    self.plate[y][x]["player"] = 0
+                elif x < 3:
+                    self.plate[y][x]["square"] = Square.BLACK
+                    self.plate[y][x]["piece"] = Square.WHITE
+                    self.plate[y][x]["player"] = 1
+                elif x > 4:
+                    self.plate[y][x]["square"] = Square.BLACK
+                    self.plate[y][x]["piece"] = Square.BLACK
+                    self.plate[y][x]["player"] = 2
                 else:
-                    self.plate[i][j]["square"] = Square.BLACK
-                    self.plate[i][j]["piece"] = Square.EMPTY
-                    self.plate[i][j]["player"] = 0
+                    self.plate[y][x]["square"] = Square.BLACK
+                    self.plate[y][x]["piece"] = Square.EMPTY
+                    self.plate[y][x]["player"] = 0
 
     def drawPlate(self):
         for y in range(0, Game.NB_PLATE_SQUARES):
             for x in range(0, Game.NB_PLATE_SQUARES):
                 pieceSelected = True if x == self.pieceSelected.x() and y == self.pieceSelected.y() else False
-                squarePossibility = True if self.game.isPointInArray(self.squarePossibilities, QPoint(x, y)) else False
+                squarePossibility = True if self.game.isPointInPossibilities(self.squarePossibilities, QPoint(x, y)) else False
                 if self.plate[y][x]["square"] == Square.BLACK:
                     self.drawSquare(x, y, Qt.gray, squarePossibility)
                 else:
@@ -111,30 +111,28 @@ class CheckersPlateWidget(QWidget):
             pos = QPoint(x, y)
             # Case cliquée + Clique sur une possibilité
             if self.pieceSelected.x() != -1 and self.pieceSelected.y() != -1\
-                    and self.game.isPointInArray(self.squarePossibilities, pos):
+                    and self.game.isPointInPossibilities(self.squarePossibilities, pos):
                 # Move
                 self.plate[y][x]["piece"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"]
                 self.plate[y][x]["player"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"]
                 self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"] = Square.EMPTY
                 self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"] = 0
                 # Hungry mode
-                if abs(x - self.pieceSelected.x()) == 2:
-                    print("toto")
+                if abs(x - self.pieceSelected.x()) > 1:
                     deadY, deadX = self.getPointBetween(pos)
                     self.plate[deadY][deadX]["piece"] = Square.EMPTY
                     self.plate[deadY][deadX]["player"] = 0
-                    print(str(deadX) + " " + str(deadY))
                 self.pieceSelected = QPoint(-1, -1)
                 self.squarePossibilities = []
                 self.game.toggleTurn()
+            # Clique sur une case du plateau
             else:
-                # Clique sur une case du plateau
                 self.pieceSelected = QPoint(-1, -1)
                 self.squarePossibilities = []
                 player = 1 if self.game.isTurnJ1() else 2
                 if self.plate[y][x]["piece"] != Square.EMPTY and self.plate[y][x]["player"] == player:
                     self.pieceSelected = pos
-                    self.squarePossibilities = self.game.searchPossibility(self.pieceSelected)
+                    self.squarePossibilities = self.game.getPossibility(pos)
             self.game.setPlate(self.plate)
             self.drawPlate()
             self.update()
