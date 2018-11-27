@@ -10,7 +10,7 @@ class ClickablePiece:
     def appendPossibilites(self, possibility):
         self.possibilities.append(possibility)
 
-    def getPiecePosition(self):
+    def getPos(self):
         return self.piecePosition
 
     def getPossibilities(self):
@@ -18,3 +18,6 @@ class ClickablePiece:
 
     def getNbPossibilities(self):
         return len(self.possibilities)
+
+    def hasPossibilities(self):
+        return True if len(self.possibilities) > 0 else False

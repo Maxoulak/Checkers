@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel
 
 from CheckersPlateWidget import CheckersPlateWidget
 
@@ -12,7 +12,9 @@ class CheckersContainerWidget(QWidget):
 
     def initUI(self):
         self.mainLayout = QHBoxLayout()
-        self.mainLayout.addWidget(self.checkersPlateWidget)
+        self.vLayout = QVBoxLayout()
+        self.vLayout.addWidget(self.checkersPlateWidget)
+        self.mainLayout.addLayout(self.vLayout)
         self.setLayout(self.mainLayout)
 
     def getCheckersPlateWidget(self):

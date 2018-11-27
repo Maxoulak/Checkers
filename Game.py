@@ -6,6 +6,7 @@ from Square import Square
 
 class Game:
     NB_PLATE_SQUARES = 8
+    FORCE_HUNGRY_MODE = True
 
     def __init__(self, plate):
         self.plate = plate
@@ -13,9 +14,11 @@ class Game:
         self.clickablePieces = []
         self.nbPiecesJ1 = 12
         self.nbPiecesJ2 = 12
+        self.atLeastOneHungryMode = False
         self.setClickablePieces()
 
     def toggleTurn(self):
+        self.atLeastOneHungryMode = False
         self.turnJ1 = False if self.turnJ1 else True
         self.setClickablePieces()
 
@@ -41,21 +44,41 @@ class Game:
                 square = self.plate[y][x]
                 if square["player"] == player:
                     clickablePiece = ClickablePiece(QPoint(x, y))
-                    clickablePiece.setPossibilities(self.searchPossibility(QPoint(x, y)))
+                    clickablePiece.setPossibilities(self.searchPossibility(QPoint(x, y), 0, [], []))
                     if clickablePiece.getNbPossibilities() > 0:
                         self.clickablePieces.append(clickablePiece)
+        self.clickablePieces = self.removeAllNoHungryMode(self.clickablePieces)
+
+    # Remove all clickablepiece which aren't hungry mode (if at leat one is possible)
+    def removeAllNoHungryMode(self, clickablePieces):
+        if not self.FORCE_HUNGRY_MODE:
+            return self.clickablePieces
+        finalClickablePieces = []
+        if self.atLeastOneHungryMode:
+            print("hungry")
+            for clickablePiece in clickablePieces:
+                isHungry = False
+                for possibility in clickablePiece.getPossibilities():
+                    if possibility.getNbPiecesEat() > 0:
+                        isHungry = True
+                        break
+                if isHungry:
+                    finalClickablePieces.append(clickablePiece)
+            return finalClickablePieces
+        return clickablePieces
+
 
     def getClickablePieces(self):
         return self.clickablePieces
 
     def getPossibility(self, point):
         for clickablePiece in self.clickablePieces:
-            pos = clickablePiece.getPiecePosition()
+            pos = clickablePiece.getPos()
             if pos.x() == point.x() and pos.y() == point.y():
                 return clickablePiece.getPossibilities()
         return []
 
-    def searchPossibility(self, piece):
+    def searchPossibility(self, piece, nbPiecesEat, posPiecesEat, pieceMoves):
         x = piece.x()
         y = piece.y()
         possibilities = []
@@ -68,13 +91,37 @@ class Game:
             points = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1), QPoint(x + 2, y - 2), QPoint(x + 2, y + 2)]
         while i < 2:
             # Check simple move
-            if self.isValidSquare(points[i]) and self.isEmptySquare(points[i]):
-                possibilities.append(Possibility(points[i], 0))
+            if self.isValidSquare(points[i]) and self.isEmptySquare(points[i]) and nbPiecesEat == 0:
+                possibilities.append(Possibility(points[i], 0, QPoint(-1, -1), []))
             # Check hungry move
             elif self.isValidSquare(points[i]) and self.canBeEat(points[i]):
                 if self.isValidSquare(points[i + 2]) and self.isEmptySquare(points[i + 2]):
-                    possibilities.append(Possibility(points[i + 2], 1))
+                    nbPiecesEat += 1
+                    posPiecesEat.append(points[i])
+                    pieceMoves.append(points[i + 2])
+                    tmpPossibilities = self.searchPossibility(points[i + 2], nbPiecesEat, posPiecesEat, pieceMoves)
+                    if len(tmpPossibilities) == 0:
+                        possibilities.append(Possibility(points[i + 2], nbPiecesEat, posPiecesEat, pieceMoves))
+                    possibilities += tmpPossibilities
             i += 1
+        return self.removeAllNoHungryModeForPossibilites(possibilities)
+
+    # Remove all possibilites which aren't hungry mode (if at leat one is possible)
+    def removeAllNoHungryModeForPossibilites(self, possibilities):
+        if not self.FORCE_HUNGRY_MODE:
+            return possibilities
+        atLeastOneHungryMode = False
+        for possibility in possibilities:
+            if possibility.nbPiecesEat > 0:
+                self.atLeastOneHungryMode = True
+                atLeastOneHungryMode = True
+                break
+        if atLeastOneHungryMode:
+            finalPossibilities = []
+            for possibility in possibilities:
+                if possibility.nbPiecesEat > 0:
+                    finalPossibilities.append(possibility)
+            return finalPossibilities
         return possibilities
 
     def canBeEat(self, point):
@@ -94,8 +141,8 @@ class Game:
             return True
         return False
 
-    def isPointInPossibilities(self, array, pointToSearch):
-        for possibility in array:
-            if possibility.getPiece().x() == pointToSearch.x() and possibility.getPiece().y() == pointToSearch.y():
-                return True
-        return False
+    def getPointInPossibilities(self, possibilities, pointToSearch):
+        for possibility in possibilities:
+            if possibility.getPos().x() == pointToSearch.x() and possibility.getPos().y() == pointToSearch.y():
+                return possibility
+        return None

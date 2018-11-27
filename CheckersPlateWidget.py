@@ -1,8 +1,11 @@
+import functools
 import sys
+import time
 
-from PyQt5.QtCore import QSize, Qt, QRectF, QPoint
+from PyQt5 import QtTest
+from PyQt5.QtCore import QSize, Qt, QRectF, QPoint, QTimer
 from PyQt5.QtGui import QImage, QPainter, QPen, QColor, QPixmap
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QApplication
 
 from Game import Game
 from Square import Square
@@ -20,6 +23,7 @@ class CheckersPlateWidget(QWidget):
         self.plate = []
         self.initPlate()
         self.initSquareDimension()
+        self.isAnimationRunning = False
         self.game = Game(self.plate)
 
         self.initUI()
@@ -59,7 +63,7 @@ class CheckersPlateWidget(QWidget):
         for y in range(0, Game.NB_PLATE_SQUARES):
             for x in range(0, Game.NB_PLATE_SQUARES):
                 pieceSelected = True if x == self.pieceSelected.x() and y == self.pieceSelected.y() else False
-                squarePossibility = True if self.game.isPointInPossibilities(self.squarePossibilities, QPoint(x, y)) else False
+                squarePossibility = True if self.game.getPointInPossibilities(self.squarePossibilities, QPoint(x, y)) else False
                 if self.plate[y][x]["square"] == Square.BLACK:
                     self.drawSquare(x, y, Qt.gray, squarePossibility)
                 else:
@@ -106,22 +110,26 @@ class CheckersPlateWidget(QWidget):
         canvasPainter.drawImage(self.rect(), self.image, self.image.rect())
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.LeftButton and not self.isAnimationRunning:
             x, y = self.getSelectedSquare(event)
             pos = QPoint(x, y)
             # Case cliquée + Clique sur une possibilité
             if self.pieceSelected.x() != -1 and self.pieceSelected.y() != -1\
-                    and self.game.isPointInPossibilities(self.squarePossibilities, pos):
-                # Move
+                    and self.game.getPointInPossibilities(self.squarePossibilities, pos) is not None:
+                player = 1 if self.game.isTurnJ1() else 2
+                # Move piece
+                possibility = self.game.getPointInPossibilities(self.squarePossibilities, pos)
+                #if possibility.getNbPiecesEat() == 0:
                 self.plate[y][x]["piece"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"]
                 self.plate[y][x]["player"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"]
                 self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"] = Square.EMPTY
                 self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"] = 0
                 # Hungry mode
-                if abs(x - self.pieceSelected.x()) > 1:
-                    deadY, deadX = self.getPointBetween(pos)
-                    self.plate[deadY][deadX]["piece"] = Square.EMPTY
-                    self.plate[deadY][deadX]["player"] = 0
+                if possibility.getNbPiecesEat() > 0:
+                    for pieceEat in possibility.getPosPiecesEat():
+                        self.plate[pieceEat.y()][pieceEat.x()]["piece"] = Square.EMPTY
+                        self.plate[pieceEat.y()][pieceEat.x()]["player"] = 0
+                    self.game.removePieces(possibility.getNbPiecesEat())
                 self.pieceSelected = QPoint(-1, -1)
                 self.squarePossibilities = []
                 self.game.toggleTurn()
@@ -136,15 +144,6 @@ class CheckersPlateWidget(QWidget):
             self.game.setPlate(self.plate)
             self.drawPlate()
             self.update()
-
-    def getPointBetween(self, toPoint):
-        if self.game.isTurnJ1():
-            if self.pieceSelected.y() - toPoint.y() > 0:
-                return self.pieceSelected.y() - 1, self.pieceSelected.x() + 1
-            return self.pieceSelected.y() + 1, self.pieceSelected.x() + 1
-        if self.pieceSelected.y() - toPoint.y() > 0:
-            return self.pieceSelected.y() - 1, self.pieceSelected.x() - 1
-        return self.pieceSelected.y() + 1, self.pieceSelected.x() - 1
 
     def getSelectedSquare(self, event):
         for y in range(0, Game.NB_PLATE_SQUARES):
