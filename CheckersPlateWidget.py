@@ -12,6 +12,7 @@ from Square import Square
 
 class CheckersPlateWidget(QWidget):
     MARGIN = 10
+    MARGIN_CROWN = 25
 
     def __init__(self, size):
         super().__init__()
@@ -25,7 +26,6 @@ class CheckersPlateWidget(QWidget):
         self.initSquareDimension()
         self.isAnimationRunning = False
         self.game = Game(self.plate)
-
         self.initUI()
 
     def initSquareDimension(self):
@@ -42,6 +42,7 @@ class CheckersPlateWidget(QWidget):
             for x in range(0, Game.NB_PLATE_SQUARES):
                 self.plate[y].append({})
                 compare = 0 if y % 2 == 0 else 1
+                self.plate[y][x]["queen"] = False
                 if x % 2 == compare:
                     self.plate[y][x]["square"] = Square.WHITE
                     self.plate[y][x]["piece"] = Square.EMPTY
@@ -72,6 +73,11 @@ class CheckersPlateWidget(QWidget):
                     self.drawPiece(x, y, Qt.black, pieceSelected)
                 elif self.plate[y][x]["piece"] == Square.WHITE:
                     self.drawPiece(x, y, Qt.white, pieceSelected)
+                if self.plate[y][x]["queen"] == True:
+                    posX = x * self.squareDimension + self.MARGIN_CROWN
+                    posY = y * self.squareDimension + self.MARGIN_CROWN
+                    width = self.squareDimension - 2 * self.MARGIN_CROWN
+                    self.drawPieceFromFile(posX, posY, width, "./icons/crown")
         self.update()
 
     def drawSquare(self, x, y, color, possibilty):
@@ -94,12 +100,9 @@ class CheckersPlateWidget(QWidget):
         width = self.squareDimension - 2 * self.MARGIN
         painter.drawEllipse(posX, posY, width, width)
 
-    def drawPieceFromFile(self, x, y, path):
+    def drawPieceFromFile(self, posX, posY, width, path):
         piece = QPixmap(path)
         painter = QPainter(self.image)
-        posX = x * self.squareDimension + self.MARGIN
-        posY = y * self.squareDimension + self.MARGIN
-        width = self.squareDimension - 2 * self.MARGIN
         painter.drawPixmap(posX, posY, width, width, piece)
 
     # Paint Event (override method)
@@ -117,19 +120,9 @@ class CheckersPlateWidget(QWidget):
             if self.pieceSelected.x() != -1 and self.pieceSelected.y() != -1\
                     and self.game.getPointInPossibilities(self.squarePossibilities, pos) is not None:
                 player = 1 if self.game.isTurnJ1() else 2
-                # Move piece
                 possibility = self.game.getPointInPossibilities(self.squarePossibilities, pos)
-                #if possibility.getNbPiecesEat() == 0:
-                self.plate[y][x]["piece"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"]
-                self.plate[y][x]["player"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"]
-                self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"] = Square.EMPTY
-                self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"] = 0
-                # Hungry mode
-                if possibility.getNbPiecesEat() > 0:
-                    for pieceEat in possibility.getPosPiecesEat():
-                        self.plate[pieceEat.y()][pieceEat.x()]["piece"] = Square.EMPTY
-                        self.plate[pieceEat.y()][pieceEat.x()]["player"] = 0
-                    self.game.removePieces(possibility.getNbPiecesEat())
+                self.movePiece(possibility)
+                self.eatPieces(possibility)
                 self.pieceSelected = QPoint(-1, -1)
                 self.squarePossibilities = []
                 self.game.toggleTurn()
@@ -144,6 +137,30 @@ class CheckersPlateWidget(QWidget):
             self.game.setPlate(self.plate)
             self.drawPlate()
             self.update()
+
+    def movePiece(self, possibility):
+        x = possibility.getPos().x()
+        y = possibility.getPos().y()
+        self.plate[y][x]["piece"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"]
+        self.plate[y][x]["player"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"]
+        self.plate[y][x]["queen"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["queen"]
+        self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"] = Square.EMPTY
+        self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"] = 0
+        self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["queen"] = False
+        self.checkQueen(possibility)
+
+    def eatPieces(self, possibility):
+        if possibility.getNbPiecesEat() > 0:
+            for pieceEat in possibility.getPosPiecesEat():
+                self.plate[pieceEat.y()][pieceEat.x()]["piece"] = Square.EMPTY
+                self.plate[pieceEat.y()][pieceEat.x()]["queen"] = False
+                self.plate[pieceEat.y()][pieceEat.x()]["player"] = 0
+            self.game.removePieces(possibility.getNbPiecesEat())
+
+    def checkQueen(self, position):
+        requiredX = self.game.NB_PLATE_SQUARES - 1 if self.game.isTurnJ1() else 0
+        if position.getPos().x() == requiredX:
+            self.plate[position.getPos().y()][position.getPos().x()]["queen"] = True
 
     def getSelectedSquare(self, event):
         for y in range(0, Game.NB_PLATE_SQUARES):
