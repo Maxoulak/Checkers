@@ -58,36 +58,31 @@ class Game:
     def searchPossibility(self, piece):
         possibilities = []
         i = 0
-        possibleMoves = self.getPotentialMovesForPlayer(piece)
+        isQueen = self.plate[piece.y()][piece.x()]["queen"]
+        possibleMoves = self.getPotentialMovesForPlayer(piece, isQueen)
         inc = int(len(possibleMoves) / 2)
         while i < inc:
             possibilities += self.checkSimpleMove(possibleMoves[i])
             i += 1
-        possibilities += self.checkHungryMove(piece, Possibility(QPoint(-1, -1), 0, [], []))
+        possibilities += self.checkHungryMove(piece, Possibility(QPoint(-1, -1), 0, [], []), isQueen)
         return possibilities
 
-    def checkHungryMove(self, piece, possibility):
-        print("check hungry")
+    def checkHungryMove(self, piece, possibility, isQueen):
         try:
             possibilities = []
             i = 0
-            potentialMoves = self.getPotentialMovesForPlayer(piece)
+            potentialMoves = self.getPotentialMovesForPlayer(piece, isQueen)
             inc = int(len(potentialMoves) / 2)
             while i < inc:
-                print("loop")
                 tmpPossibility = Possibility(potentialMoves[i + inc], possibility.getNbPiecesEat(),
-                                             possibility.getPosPiecesEat(), possibility.getPieceMoves())
+                                             list(possibility.getPosPiecesEat()), list(possibility.getPieceMoves()))
                 if self.isValidSquare(potentialMoves[i]) and self.canBeEat(potentialMoves[i]):
                     if self.isValidSquare(potentialMoves[i + inc]) and self.isEmptySquare(potentialMoves[i + inc]):
-                        print(tmpPossibility)
-                        print(potentialMoves[i])
-                        print(tmpPossibility.getNbPiecesEat())
-                        print(tmpPossibility.getPosPiecesEat())
                         tmpPossibility.addNbPiecesEat()
                         tmpPossibility.posPiecesEat.append(potentialMoves[i])
                         tmpPossibility.pieceMoves.append(potentialMoves[i + inc])
                         possibilities.append(tmpPossibility)
-                        possibilities += self.checkHungryMove(potentialMoves[i + inc], tmpPossibility)
+                        possibilities += self.checkHungryMove(potentialMoves[i + inc], tmpPossibility, isQueen)
                 i += 1
         except Exception as e:
             print(e)
@@ -98,7 +93,7 @@ class Game:
             return [Possibility(move, 0, [], [])]
         return []
 
-    def getPotentialMovesForPlayer(self, piece):
+    def getPotentialMovesForPlayer(self, piece, isQueen):
         x = piece.x()
         y = piece.y()
         # points : [cell1, cell2, cell1 + 1, cell2 + 1]
@@ -106,7 +101,7 @@ class Game:
         potentialMovesJ1 = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1), QPoint(x + 2, y - 2), QPoint(x + 2, y + 2)]
         potentialMovesJ2 = [QPoint(x - 1, y - 1), QPoint(x - 1, y + 1), QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
         potentialMoves = potentialMovesJ1 if self.isTurnJ1() else potentialMovesJ2
-        if self.plate[y][x]["queen"]:
+        if isQueen:
             potentialMoves = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1), QPoint(x - 1, y - 1), QPoint(x - 1, y + 1),
                               QPoint(x + 2, y - 2), QPoint(x + 2, y + 2), QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
         return potentialMoves

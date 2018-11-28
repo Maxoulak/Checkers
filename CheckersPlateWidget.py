@@ -113,29 +113,32 @@ class CheckersPlateWidget(QWidget):
         canvasPainter.drawImage(self.rect(), self.image, self.image.rect())
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton and not self.isAnimationRunning:
-            x, y = self.getSelectedSquare(event)
-            pos = QPoint(x, y)
-            # Case cliquée + Clique sur une possibilité
-            if self.pieceSelected.x() != -1 and self.pieceSelected.y() != -1\
-                    and self.game.getPointInPossibilities(self.squarePossibilities, pos) is not None:
-                possibility = self.game.getPointInPossibilities(self.squarePossibilities, pos)
-                self.movePiece(possibility)
-                self.eatPieces(possibility)
-                self.pieceSelected = QPoint(-1, -1)
-                self.squarePossibilities = []
-                self.game.toggleTurn()
-            # Clique sur une case du plateau
-            else:
-                self.pieceSelected = QPoint(-1, -1)
-                self.squarePossibilities = []
-                player = 1 if self.game.isTurnJ1() else 2
-                if self.plate[y][x]["piece"] != Square.EMPTY and self.plate[y][x]["player"] == player:
-                    self.pieceSelected = pos
-                    self.squarePossibilities = self.game.getPossibility(pos)
-            self.game.setPlate(self.plate)
-            self.drawPlate()
-            self.update()
+        try:
+            if event.button() == Qt.LeftButton and not self.isAnimationRunning:
+                x, y = self.getSelectedSquare(event)
+                pos = QPoint(x, y)
+                # Case cliquée + Clique sur une possibilité
+                if self.pieceSelected.x() != -1 and self.pieceSelected.y() != -1\
+                        and self.game.getPointInPossibilities(self.squarePossibilities, pos) is not None:
+                    possibility = self.game.getPointInPossibilities(self.squarePossibilities, pos)
+                    self.movePiece(possibility)
+                    self.eatPieces(possibility)
+                    self.pieceSelected = QPoint(-1, -1)
+                    self.squarePossibilities = []
+                    self.game.toggleTurn()
+                # Clique sur une case du plateau
+                else:
+                    self.pieceSelected = QPoint(-1, -1)
+                    self.squarePossibilities = []
+                    player = 1 if self.game.isTurnJ1() else 2
+                    if self.plate[y][x]["piece"] != Square.EMPTY and self.plate[y][x]["player"] == player:
+                        self.pieceSelected = pos
+                        self.squarePossibilities = self.game.getPossibility(pos)
+                self.game.setPlate(self.plate)
+                self.drawPlate()
+                self.update()
+        except Exception as e:
+            print(e)
 
     def movePiece(self, possibility):
         x = possibility.getPos().x()
