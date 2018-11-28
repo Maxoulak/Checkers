@@ -119,7 +119,6 @@ class CheckersPlateWidget(QWidget):
             # Case cliquée + Clique sur une possibilité
             if self.pieceSelected.x() != -1 and self.pieceSelected.y() != -1\
                     and self.game.getPointInPossibilities(self.squarePossibilities, pos) is not None:
-                player = 1 if self.game.isTurnJ1() else 2
                 possibility = self.game.getPointInPossibilities(self.squarePossibilities, pos)
                 self.movePiece(possibility)
                 self.eatPieces(possibility)

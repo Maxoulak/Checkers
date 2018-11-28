@@ -41,7 +41,7 @@ class Game:
                 square = self.plate[y][x]
                 if square["player"] == player:
                     clickablePiece = ClickablePiece(QPoint(x, y))
-                    clickablePiece.setPossibilities(self.searchPossibility(QPoint(x, y), 0, [], []))
+                    clickablePiece.setPossibilities(self.searchPossibility(QPoint(x, y)))
                     if clickablePiece.getNbPossibilities() > 0:
                         self.clickablePieces.append(clickablePiece)
 
@@ -55,42 +55,61 @@ class Game:
                 return clickablePiece.getPossibilities()
         return []
 
-    def searchPossibility(self, piece, nbPiecesEat, posPiecesEat, pieceMoves):
+    def searchPossibility(self, piece):
         possibilities = []
         i = 0
-        points = self.getPotentialMovesForPlayer(piece)
-        inc = int(len(points) / 2)
+        possibleMoves = self.getPotentialMovesForPlayer(piece)
+        inc = int(len(possibleMoves) / 2)
         while i < inc:
-            # Check simple move
-            if self.isValidSquare(points[i]) and self.isEmptySquare(points[i]) and nbPiecesEat == 0:
-                possibilities.append(Possibility(points[i], 0, QPoint(-1, -1), []))
-            # Check hungry move
-            elif self.isValidSquare(points[i]) and self.canBeEat(points[i]):
-                if self.isValidSquare(points[i + inc]) and self.isEmptySquare(points[i + inc]):
-                    nbPiecesEat += 1
-                    posPiecesEat.append(points[i])
-                    pieceMoves.append(points[i + inc])
-                    possibilities.append(Possibility(points[i + inc], nbPiecesEat, posPiecesEat, pieceMoves))
-                    possibilities += self.searchPossibility(points[i + inc], nbPiecesEat, posPiecesEat, pieceMoves)
+            possibilities += self.checkSimpleMove(possibleMoves[i])
             i += 1
+        possibilities += self.checkHungryMove(piece, Possibility(QPoint(-1, -1), 0, [], []))
         return possibilities
 
-    def checkSimpleMove(self, piece, possibleMove):
-        possibilities = []
+    def checkHungryMove(self, piece, possibility):
+        print("check hungry")
+        try:
+            possibilities = []
+            i = 0
+            potentialMoves = self.getPotentialMovesForPlayer(piece)
+            inc = int(len(potentialMoves) / 2)
+            while i < inc:
+                print("loop")
+                tmpPossibility = Possibility(potentialMoves[i + inc], possibility.getNbPiecesEat(),
+                                             possibility.getPosPiecesEat(), possibility.getPieceMoves())
+                if self.isValidSquare(potentialMoves[i]) and self.canBeEat(potentialMoves[i]):
+                    if self.isValidSquare(potentialMoves[i + inc]) and self.isEmptySquare(potentialMoves[i + inc]):
+                        print(tmpPossibility)
+                        print(potentialMoves[i])
+                        print(tmpPossibility.getNbPiecesEat())
+                        print(tmpPossibility.getPosPiecesEat())
+                        tmpPossibility.addNbPiecesEat()
+                        tmpPossibility.posPiecesEat.append(potentialMoves[i])
+                        tmpPossibility.pieceMoves.append(potentialMoves[i + inc])
+                        possibilities.append(tmpPossibility)
+                        possibilities += self.checkHungryMove(potentialMoves[i + inc], tmpPossibility)
+                i += 1
+        except Exception as e:
+            print(e)
+        return possibilities
 
+    def checkSimpleMove(self, move):
+        if self.isValidSquare(move) and self.isEmptySquare(move):
+            return [Possibility(move, 0, [], [])]
+        return []
 
     def getPotentialMovesForPlayer(self, piece):
         x = piece.x()
         y = piece.y()
         # points : [cell1, cell2, cell1 + 1, cell2 + 1]
         # or [cell1, cell2, cell3, cell4, cell1 + 1, cell2 + 1, cell3 + 1, cell4 + 1] if queen
-        pointsJ1 = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1), QPoint(x + 2, y - 2), QPoint(x + 2, y + 2)]
-        pointsJ2 = [QPoint(x - 1, y - 1), QPoint(x - 1, y + 1), QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
-        points = pointsJ1 if self.isTurnJ1() else pointsJ2
+        potentialMovesJ1 = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1), QPoint(x + 2, y - 2), QPoint(x + 2, y + 2)]
+        potentialMovesJ2 = [QPoint(x - 1, y - 1), QPoint(x - 1, y + 1), QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
+        potentialMoves = potentialMovesJ1 if self.isTurnJ1() else potentialMovesJ2
         if self.plate[y][x]["queen"]:
-            points = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1), QPoint(x - 1, y - 1), QPoint(x - 1, y + 1),
-                      QPoint(x + 2, y - 2), QPoint(x + 2, y + 2), QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
-        return points
+            potentialMoves = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1), QPoint(x - 1, y - 1), QPoint(x - 1, y + 1),
+                              QPoint(x + 2, y - 2), QPoint(x + 2, y + 2), QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
+        return potentialMoves
 
     def canBeEat(self, point):
         player = 1 if self.isTurnJ1() else 2

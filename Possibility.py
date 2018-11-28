@@ -10,8 +10,11 @@ class Possibility:
     def setRate(self, rate):
         self.rate = rate
 
-    def setNbPieceEat(self, nbPieceEat):
-        self.nbPiecesEat = nbPieceEat
+    def setPiecePosition(self, pos):
+        self.piecePosition = pos
+
+    def addNbPiecesEat(self):
+        self.nbPiecesEat += 1
 
     def getRate(self):
         return self.rate
