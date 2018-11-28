@@ -96,14 +96,15 @@ class Game:
     def getPotentialMovesForPlayer(self, piece, isQueen):
         x = piece.x()
         y = piece.y()
-        # points : [cell1, cell2, cell1 + 1, cell2 + 1]
-        # or [cell1, cell2, cell3, cell4, cell1 + 1, cell2 + 1, cell3 + 1, cell4 + 1] if queen
-        potentialMovesJ1 = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1), QPoint(x + 2, y - 2), QPoint(x + 2, y + 2)]
-        potentialMovesJ2 = [QPoint(x - 1, y - 1), QPoint(x - 1, y + 1), QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
-        potentialMoves = potentialMovesJ1 if self.isTurnJ1() else potentialMovesJ2
+        potentialMovesFirstJ1 = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1)]
+        potentialMovesSecondJ1 = [QPoint(x + 2, y - 2), QPoint(x + 2, y + 2)]
+        potentialMovesFirstJ2 = [QPoint(x - 1, y - 1), QPoint(x - 1, y + 1)]
+        potentialMovesSecondJ2 = [QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
+        potentialMoves = potentialMovesFirstJ1 + potentialMovesSecondJ1
+        if not self.isTurnJ1():
+            potentialMoves = potentialMovesFirstJ2 + potentialMovesSecondJ2
         if isQueen:
-            potentialMoves = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1), QPoint(x - 1, y - 1), QPoint(x - 1, y + 1),
-                              QPoint(x + 2, y - 2), QPoint(x + 2, y + 2), QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
+            potentialMoves = potentialMovesFirstJ1 + potentialMovesFirstJ2 + potentialMovesSecondJ1 + potentialMovesSecondJ2
         return potentialMoves
 
     def canBeEat(self, point):
