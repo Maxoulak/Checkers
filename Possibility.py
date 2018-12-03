@@ -7,6 +7,10 @@ class Possibility:
         self.posPiecesEat = posPiecesEat
         self.pieceMoves = pieceMoves
 
+    # DEBUG PURPOSE
+    def __str__(self):
+        return str(self.piecePosition.x()) + " " + str(self.piecePosition.y())
+
     def setRate(self, rate):
         self.rate = rate
 

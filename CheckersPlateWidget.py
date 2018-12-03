@@ -5,7 +5,7 @@ import time
 from PyQt5 import QtTest
 from PyQt5.QtCore import QSize, Qt, QRectF, QPoint, QTimer
 from PyQt5.QtGui import QImage, QPainter, QPen, QColor, QPixmap
-from PyQt5.QtWidgets import QWidget, QApplication
+from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox
 
 from AI.Ai import AiPlayer
 from Game import Game
@@ -26,6 +26,9 @@ class CheckersPlateWidget(QWidget):
         self.initPlate()
         self.initSquareDimension()
         self.isAnimationRunning = False
+        self.currentAnimationIndex = 0
+        self.currentAnimationPossibility = None
+        self.currentAnimationOldPos = QPoint(-1, -1)
         self.game = Game(self.plate)
         self.ai = AiPlayer(self.game)
         self.initUI()
@@ -119,56 +122,56 @@ class CheckersPlateWidget(QWidget):
         canvasPainter.drawImage(self.rect(), self.image, self.image.rect())
 
     def mousePressEvent(self, event):
-        try:
-            if event.button() == Qt.LeftButton and not self.isAnimationRunning:
-                x, y = self.getSelectedSquare(event)
-                pos = QPoint(x, y)
-                # Case cliquée + Clique sur une possibilité
-                if self.pieceSelected.x() != -1 and self.pieceSelected.y() != -1\
-                        and self.game.getPointInPossibilities(self.squarePossibilities, pos) is not None:
-                    possibility = self.game.getPointInPossibilities(self.squarePossibilities, pos)
-                    self.movePiece(possibility)
-                    self.eatPieces(possibility)
-                    self.pieceSelected = QPoint(-1, -1)
-                    self.squarePossibilities = []
-                    self.game.toggleTurn()
-                # Clique sur une case du plateau
-                else:
-                    self.pieceSelected = QPoint(-1, -1)
-                    self.squarePossibilities = []
-                    player = 1 if self.game.isTurnJ1() else 2
-                    if self.plate[y][x]["piece"] != Square.EMPTY and self.plate[y][x]["player"] == player:
-                        self.pieceSelected = pos
-                        self.squarePossibilities = self.game.getPossibility(pos)
-                self.game.setPlate(self.plate)
-                self.drawPlate()
-                self.update()
-        except Exception as e:
-            print(e)
+        if event.button() == Qt.LeftButton and not self.isAnimationRunning:
+            x, y = self.getSelectedSquare(event)
+            pos = QPoint(x, y)
+            # Case cliquée + Clique sur une possibilité
+            if self.pieceSelected.x() != -1 and self.pieceSelected.y() != -1\
+                    and self.game.getPointInPossibilities(self.squarePossibilities, pos) is not None:
+                possibility = self.game.getPointInPossibilities(self.squarePossibilities, pos)
+                self.startAnimation(possibility)
+                self.pieceSelected = QPoint(-1, -1)
+                self.squarePossibilities = []
+            # Clique sur une case du plateau
+            else:
+                self.pieceSelected = QPoint(-1, -1)
+                self.squarePossibilities = []
+                player = 1 if self.game.isTurnJ1() else 2
+                if self.plate[y][x]["piece"] != Square.EMPTY and self.plate[y][x]["player"] == player:
+                    self.pieceSelected = pos
+                    self.squarePossibilities = self.game.getPossibility(pos)
+            self.game.setPlate(self.plate)
+            self.drawPlate()
+            self.update()
 
-    def movePiece(self, possibility):
-        x = possibility.getPos().x()
-        y = possibility.getPos().y()
-        self.plate[y][x]["piece"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"]
-        self.plate[y][x]["player"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"]
-        self.plate[y][x]["queen"] = self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["queen"]
-        self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["piece"] = Square.EMPTY
-        self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["player"] = 0
-        self.plate[self.pieceSelected.y()][self.pieceSelected.x()]["queen"] = False
-        self.checkQueen(possibility)
+    def startAnimation(self, possibility):
+        self.isAnimationRunning = True
+        self.currentAnimationIndex = 0
+        self.currentAnimationPossibility = possibility
+        self.currentAnimationOldPos = self.pieceSelected
+        self.doAnimation()
 
-    def eatPieces(self, possibility):
-        if possibility.getNbPiecesEat() > 0:
-            for pieceEat in possibility.getPosPiecesEat():
-                self.plate[pieceEat.y()][pieceEat.x()]["piece"] = Square.EMPTY
-                self.plate[pieceEat.y()][pieceEat.x()]["queen"] = False
-                self.plate[pieceEat.y()][pieceEat.x()]["player"] = 0
-            self.game.removePieces(possibility.getNbPiecesEat())
-
-    def checkQueen(self, position):
-        requiredX = self.game.NB_PLATE_SQUARES - 1 if self.game.isTurnJ1() else 0
-        if position.getPos().x() == requiredX:
-            self.plate[position.getPos().y()][position.getPos().x()]["queen"] = True
+    def doAnimation(self):
+        possibility = self.currentAnimationPossibility
+        i = self.currentAnimationIndex
+        if i < len(possibility.getPieceMoves()):
+            self.game.movePiece(self.currentAnimationOldPos, possibility.getPieceMoves()[i], self.plate, True)
+            self.currentAnimationOldPos = possibility.getPieceMoves()[i]
+            if i < possibility.getNbPiecesEat():
+                self.game.eatPiece(possibility.getPosPiecesEat()[i], self.plate)
+            self.currentAnimationIndex += 1
+            self.game.setPlate(self.plate)
+            self.drawPlate()
+            self.update()
+            if self.currentAnimationIndex >= len(possibility.getPieceMoves()):
+                self.game.removePieces(possibility.getNbPiecesEat())
+                self.game.toggleTurn()
+                self.isAnimationRunning = False
+                self.currentAnimationPossibility = None
+                self.currentAnimationIndex = 0
+                self.checkWin()
+            else:
+                QTimer.singleShot(500, self.doAnimation)
 
     def getSelectedSquare(self, event):
         for y in range(0, Game.NB_PLATE_SQUARES):
@@ -181,6 +184,19 @@ class CheckersPlateWidget(QWidget):
                     if posXMin <= event.pos().x() <= posXMax:
                         return x, y
         return -1, -1
+
+    def checkWin(self):
+        if self.checkLoose():
+            player = "Black" if self.game.isTurnJ1() else "White"
+            QMessageBox.about(self, "Win", "Player " + player + " won !")
+
+    def checkLoose(self):
+        player = 1 if self.game.isTurnJ1() else 2
+        for y in range(0, self.game.NB_PLATE_SQUARES):
+            for x in range(0, self.game.NB_PLATE_SQUARES):
+                if self.plate[y][x]["player"] == player:
+                    return False
+        return True
 
     def printPlate(self, piece):
         for row in self.plate:

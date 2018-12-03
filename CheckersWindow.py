@@ -25,6 +25,7 @@ class CheckersWindow(QMainWindow):
 # Main Function
 if __name__ == "__main__":
     try:
+        sys.setrecursionlimit(10000)
         app = QApplication(sys.argv)
         window = CheckersWindow()
         window.show()

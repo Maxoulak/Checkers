@@ -1,4 +1,5 @@
 from PyQt5.QtCore import QPoint
+from PyQt5.QtWidgets import QMessageBox
 
 from ClickablePiece import ClickablePiece
 from Possibility import Possibility
@@ -71,43 +72,74 @@ class Game:
         possibilities += self.checkHungryMove(piece, Possibility(QPoint(-1, -1), 0, [], []), isQueen)
         return possibilities
 
-    def checkHungryMove(self, piece, possibility, isQueen):
-        try:
-            possibilities = []
-            i = 0
-            potentialMoves = self.getPotentialMovesForPlayer(piece, isQueen)
-            inc = int(len(potentialMoves) / 2)
-            while i < inc:
-                tmpPossibility = Possibility(potentialMoves[i + inc], possibility.getNbPiecesEat(),
-                                             list(possibility.getPosPiecesEat()), list(possibility.getPieceMoves()))
-                if self.isValidSquare(potentialMoves[i]) and self.canBeEat(potentialMoves[i]):
-                    if self.isValidSquare(potentialMoves[i + inc]) and self.isEmptySquare(potentialMoves[i + inc]):
-                        tmpPossibility.addNbPiecesEat()
-                        tmpPossibility.posPiecesEat.append(potentialMoves[i])
-                        tmpPossibility.pieceMoves.append(potentialMoves[i + inc])
-                        possibilities.append(tmpPossibility)
-                        possibilities += self.checkHungryMove(potentialMoves[i + inc], tmpPossibility, isQueen)
-                i += 1
-        except Exception as e:
-            print(e)
-        return possibilities
-
     def checkSimpleMove(self, move):
         if self.isValidSquare(move) and self.isEmptySquare(move):
-            return [Possibility(move, 0, [], [])]
+            return [Possibility(move, 0, [], [move])]
         return []
+
+    def checkHungryMove(self, piece, possibility, isQueen):
+        possibilities = []
+        i = 0
+        potentialMoves = self.getPotentialMovesForPlayer(piece, isQueen)
+        inc = int(len(potentialMoves) / 2)
+        while i < inc:
+            eatPos = potentialMoves[i]
+            currentPossibility = Possibility(potentialMoves[i + inc], possibility.getNbPiecesEat(),
+                                         list(possibility.getPosPiecesEat()), list(possibility.getPieceMoves()))
+            if self.isValidSquare(eatPos) and self.canBeEat(eatPos):
+                if self.isValidSquare(potentialMoves[i + inc]) and self.isEmptySquare(potentialMoves[i + inc]):
+                    currentPossibility.addNbPiecesEat()
+                    currentPossibility.posPiecesEat.append(eatPos)
+                    currentPossibility.pieceMoves.append(potentialMoves[i + inc])
+                    eatPiece = self.plate[eatPos.y()][eatPos.x()]["piece"]
+                    eatQueen = self.plate[eatPos.y()][eatPos.x()]["queen"]
+                    eatPlayer = self.plate[eatPos.y()][eatPos.x()]["player"]
+                    self.movePiece(piece, potentialMoves[i + inc], self.plate, False)
+                    self.eatPiece(eatPos, self.plate)
+                    possibilities.append(currentPossibility)
+                    possibilities += self.checkHungryMove(potentialMoves[i + inc], currentPossibility, isQueen)
+                    self.movePiece(potentialMoves[i + inc], piece, self.plate, False)
+                    self.addPiece(eatPos, eatPiece, eatQueen, eatPlayer, self.plate)
+            i += 1
+        return possibilities
+
+    def eatPiece(self, pieceEat, plate):
+        plate[pieceEat.y()][pieceEat.x()]["piece"] = Square.EMPTY
+        plate[pieceEat.y()][pieceEat.x()]["queen"] = False
+        plate[pieceEat.y()][pieceEat.x()]["player"] = 0
+
+    def addPiece(self, pos, piece, queen, player, plate):
+        plate[pos.y()][pos.x()]["piece"] = piece
+        plate[pos.y()][pos.x()]["queen"] = queen
+        plate[pos.y()][pos.x()]["player"] = player
+
+    def movePiece(self, src, dest, plate, becomeQueen):
+        plate[dest.y()][dest.x()]["piece"] = plate[src.y()][src.x()]["piece"]
+        plate[dest.y()][dest.x()]["player"] = plate[src.y()][src.x()]["player"]
+        plate[dest.y()][dest.x()]["queen"] = plate[src.y()][src.x()]["queen"]
+        plate[src.y()][src.x()]["piece"] = Square.EMPTY
+        plate[src.y()][src.x()]["player"] = 0
+        plate[src.y()][src.x()]["queen"] = False
+        if becomeQueen:
+            self.checkQueen(dest, plate)
+
+    def checkQueen(self, position, plate):
+        requiredX = self.NB_PLATE_SQUARES - 1 if self.isTurnJ1() else 0
+        if position.x() == requiredX:
+            plate[position.y()][position.x()]["queen"] = True
 
     def getPotentialMovesForPlayer(self, piece, isQueen):
         x = piece.x()
         y = piece.y()
-        # points : [cell1, cell2, cell1 + 1, cell2 + 1]
-        # or [cell1, cell2, cell3, cell4, cell1 + 1, cell2 + 1, cell3 + 1, cell4 + 1] if queen
-        potentialMovesJ1 = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1), QPoint(x + 2, y - 2), QPoint(x + 2, y + 2)]
-        potentialMovesJ2 = [QPoint(x - 1, y - 1), QPoint(x - 1, y + 1), QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
-        potentialMoves = potentialMovesJ1 if self.isTurnJ1() else potentialMovesJ2
+        potentialMovesFirstJ1 = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1)]
+        potentialMovesSecondJ1 = [QPoint(x + 2, y - 2), QPoint(x + 2, y + 2)]
+        potentialMovesFirstJ2 = [QPoint(x - 1, y - 1), QPoint(x - 1, y + 1)]
+        potentialMovesSecondJ2 = [QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
+        potentialMoves = potentialMovesFirstJ1 + potentialMovesSecondJ1
+        if not self.isTurnJ1():
+            potentialMoves = potentialMovesFirstJ2 + potentialMovesSecondJ2
         if isQueen:
-            potentialMoves = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1), QPoint(x - 1, y - 1), QPoint(x - 1, y + 1),
-                              QPoint(x + 2, y - 2), QPoint(x + 2, y + 2), QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
+            potentialMoves = potentialMovesFirstJ1 + potentialMovesFirstJ2 + potentialMovesSecondJ1 + potentialMovesSecondJ2
         return potentialMoves
 
     def canBeEat(self, point):
