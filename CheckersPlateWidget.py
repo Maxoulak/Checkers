@@ -7,6 +7,7 @@ from PyQt5.QtCore import QSize, Qt, QRectF, QPoint, QTimer
 from PyQt5.QtGui import QImage, QPainter, QPen, QColor, QPixmap
 from PyQt5.QtWidgets import QWidget, QApplication
 
+from AI.Ai import AiPlayer
 from Game import Game
 from Square import Square
 
@@ -26,6 +27,7 @@ class CheckersPlateWidget(QWidget):
         self.initSquareDimension()
         self.isAnimationRunning = False
         self.game = Game(self.plate)
+        self.ai = AiPlayer(self.game)
         self.initUI()
 
     def initSquareDimension(self):
@@ -78,7 +80,11 @@ class CheckersPlateWidget(QWidget):
                     posY = y * self.squareDimension + self.MARGIN_CROWN
                     width = self.squareDimension - 2 * self.MARGIN_CROWN
                     self.drawPieceFromFile(posX, posY, width, "./icons/crown")
+        if self.game.isAi and not self.game.turnJ1:
+            self.ai.play()
+            self.game.toggleTurn()
         self.update()
+
 
     def drawSquare(self, x, y, color, possibilty):
         painter = QPainter(self.image)
