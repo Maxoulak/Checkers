@@ -10,9 +10,13 @@ class Game:
     NB_PIECE_PER_PLAYER = 12
 
     def __init__(self, plate, container):
-        self.plate = plate
+        self.Ai = False
+        self.container = container
+        self.initGameVariables(plate)
+
+    def initGameVariables(self, plate):
+        self.setPlate(plate)
         self.turnJ1 = True
-        self.Ai = True
         self.clickablePieces = []
         self.nbPiecesJ1 = 12
         self.nbPiecesJ2 = 12
@@ -20,7 +24,9 @@ class Game:
         self.timerJ2 = 0
         self.gameRunning = False
         self.setClickablePieces()
-        self.container = container
+
+    def restartGame(self, plate):
+        self.initGameVariables(plate)
 
     def toggleTurn(self):
         self.turnJ1 = False if self.turnJ1 else True
@@ -38,13 +44,14 @@ class Game:
         self.gameRunning = False
 
     def incTimer(self):
+        if not self.gameRunning:
+            return
         if self.turnJ1:
             self.timerJ1 += 1
         else:
             self.timerJ2 += 1
         self.container.updateTimerUI()
-        if self.gameRunning:
-            QTimer.singleShot(1000, self.incTimer)
+        QTimer.singleShot(1000, self.incTimer)
 
     def getTimeMinJ1(self):
         return self.timerJ1 / 60

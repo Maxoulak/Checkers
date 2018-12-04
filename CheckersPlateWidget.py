@@ -18,20 +18,37 @@ class CheckersPlateWidget(QWidget):
     def __init__(self, size, container):
         super().__init__()
 
-        self.pieceSelected = QPoint(-1, -1)
-        self.squarePossibilities = []
+        self.container = container
+        self.highlightPossibilities = True
         self.size = min(size.width(), size.height())
         self.setFixedSize(self.size, self.size)
+        self.initSquareDimension()
+        self.initGameVariables(False)
+
+    def initGameVariables(self, restart):
+        self.pieceSelected = QPoint(-1, -1)
+        self.squarePossibilities = []
         self.plate = []
         self.initPlate()
-        self.initSquareDimension()
         self.isAnimationRunning = False
         self.currentAnimationIndex = 0
         self.currentAnimationPossibility = None
         self.currentAnimationOldPos = QPoint(-1, -1)
-        self.game = Game(self.plate, container)
+        if restart:
+            self.game.setPlate(self.plate)
+        else:
+            self.game = Game(self.plate, self.container)
         self.ai = AiPlayer(self.game)
         self.initUI()
+
+    def restartGame(self):
+        self.initGameVariables(True)
+        self.game.restartGame(self.plate)
+
+    def toggleAI(self):
+        ai = self.game.Ai
+        self.container.restartGame()
+        self.game.Ai = False if ai else True
 
     def initSquareDimension(self):
         self.squareDimension = self.size / Game.NB_PLATE_SQUARES
@@ -65,6 +82,9 @@ class CheckersPlateWidget(QWidget):
                     self.plate[y][x]["piece"] = Square.EMPTY
                     self.plate[y][x]["player"] = 0
 
+    def toggleHighlightPossibilities(self):
+        self.highlightPossibilities = False if self.highlightPossibilities else True
+
     def drawPlate(self):
         for y in range(0, Game.NB_PLATE_SQUARES):
             for x in range(0, Game.NB_PLATE_SQUARES):
@@ -91,7 +111,7 @@ class CheckersPlateWidget(QWidget):
 
     def drawSquare(self, x, y, color, possibilty):
         painter = QPainter(self.image)
-        color = Qt.darkGray if possibilty else QColor(color)
+        color = Qt.darkGray if possibilty and self.highlightPossibilities else QColor(color)
         painter.setBrush(color)
         painter.setPen(color)
         painter.drawRect(x * self.squareDimension, y * self.squareDimension, self.squareDimension - 1,
@@ -108,14 +128,6 @@ class CheckersPlateWidget(QWidget):
         posY = y * self.squareDimension + self.MARGIN
         width = self.squareDimension - 2 * self.MARGIN
         painter.drawEllipse(posX, posY, width, width)
-        #if selected:
-        #    color.setAlpha(120)
-        #painter.setBrush(color)
-        #painter.setPen(color)
-        #posX += 2
-        #posY += 2
-        #width -= 4
-        #painter.drawEllipse(posX, posY, width, width)
 
     def drawPieceFromFile(self, posX, posY, width, path):
         piece = QPixmap(path)
