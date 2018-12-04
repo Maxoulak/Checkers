@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QPoint
+from PyQt5.QtCore import QPoint, QTime, QTimer
 from PyQt5.QtWidgets import QMessageBox
 
 from ClickablePiece import ClickablePiece
@@ -7,24 +7,67 @@ from Square import Square
 
 class Game:
     NB_PLATE_SQUARES = 8
+    NB_PIECE_PER_PLAYER = 12
 
-    def __init__(self, plate):
+    def __init__(self, plate, container):
         self.plate = plate
-        self.turnJ1 = True
+        self.turnJ1 = False
         self.clickablePieces = []
         self.nbPiecesJ1 = 12
         self.nbPiecesJ2 = 12
+        self.timerJ1 = 0
+        self.timerJ2 = 0
+        self.gameRunning = False
         self.setClickablePieces()
+        self.container = container
 
     def toggleTurn(self):
         self.turnJ1 = False if self.turnJ1 else True
         self.setClickablePieces()
+        self.container.updateUI()
+
+    def launchGame(self):
+        self.gameRunning = True
+        self.incTimer()
+
+    def isGameRunning(self):
+        return self.gameRunning
+
+    def stopGame(self):
+        self.gameRunning = False
+
+    def incTimer(self):
+        if self.turnJ1:
+            self.timerJ1 += 1
+        else:
+            self.timerJ2 += 1
+        self.container.updateTimerUI()
+        if self.gameRunning:
+            QTimer.singleShot(1000, self.incTimer)
+
+    def getTimeMinJ1(self):
+        return self.timerJ1 / 60
+
+    def getTimeSecJ1(self):
+        return self.timerJ1 % 60
+
+    def getTimeMinJ2(self):
+        return self.timerJ2 / 60
+
+    def getTimeSecJ2(self):
+        return self.timerJ2 % 60
 
     def removePieces(self, nbToRemove):
         if self.turnJ1:
             self.nbPiecesJ2 -= nbToRemove
         else:
             self.nbPiecesJ1 -= nbToRemove
+
+    def getNbPiecesPlayer1(self):
+        return self.nbPiecesJ1
+
+    def getNbPiecesPlayer2(self):
+        return self.nbPiecesJ2
 
     def isTurnJ1(self):
         return self.turnJ1

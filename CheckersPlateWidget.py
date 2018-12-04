@@ -14,7 +14,7 @@ class CheckersPlateWidget(QWidget):
     MARGIN = 10
     MARGIN_CROWN = 25
 
-    def __init__(self, size):
+    def __init__(self, size, container):
         super().__init__()
 
         self.pieceSelected = QPoint(-1, -1)
@@ -28,7 +28,7 @@ class CheckersPlateWidget(QWidget):
         self.currentAnimationIndex = 0
         self.currentAnimationPossibility = None
         self.currentAnimationOldPos = QPoint(-1, -1)
-        self.game = Game(self.plate)
+        self.game = Game(self.plate, container)
         self.initUI()
 
     def initSquareDimension(self):
@@ -102,6 +102,14 @@ class CheckersPlateWidget(QWidget):
         posY = y * self.squareDimension + self.MARGIN
         width = self.squareDimension - 2 * self.MARGIN
         painter.drawEllipse(posX, posY, width, width)
+        #if selected:
+        #    color.setAlpha(120)
+        #painter.setBrush(color)
+        #painter.setPen(color)
+        #posX += 2
+        #posY += 2
+        #width -= 4
+        #painter.drawEllipse(posX, posY, width, width)
 
     def drawPieceFromFile(self, posX, posY, width, path):
         piece = QPixmap(path)
@@ -132,6 +140,8 @@ class CheckersPlateWidget(QWidget):
                 self.squarePossibilities = []
                 player = 1 if self.game.isTurnJ1() else 2
                 if self.plate[y][x]["piece"] != Square.EMPTY and self.plate[y][x]["player"] == player:
+                    if not self.game.isGameRunning():
+                        self.game.launchGame()
                     self.pieceSelected = pos
                     self.squarePossibilities = self.game.getPossibility(pos)
             self.game.setPlate(self.plate)
@@ -182,6 +192,7 @@ class CheckersPlateWidget(QWidget):
     def checkWin(self):
         if self.checkLoose():
             player = "Black" if self.game.isTurnJ1() else "White"
+            self.game.stopGame()
             QMessageBox.about(self, "Win", "Player " + player + " won !")
 
     def checkLoose(self):
@@ -201,3 +212,6 @@ class CheckersPlateWidget(QWidget):
                     sys.stdout.write(str(square["square"].value))
             sys.stdout.write("\n")
         sys.stdout.flush()
+
+    def getGame(self):
+        return self.game
