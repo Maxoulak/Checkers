@@ -145,7 +145,7 @@ class CheckersPlateWidget(QWidget):
             if self.pieceSelected.x() != -1 and self.pieceSelected.y() != -1\
                     and self.game.getPointInPossibilities(self.squarePossibilities, pos) is not None:
                 possibility = self.game.getPointInPossibilities(self.squarePossibilities, pos)
-                self.startAnimation(possibility)
+                self.startAnimation(possibility, self.pieceSelected)
                 self.pieceSelected = QPoint(-1, -1)
                 self.squarePossibilities = []
             # Clique sur une case du plateau
@@ -162,11 +162,11 @@ class CheckersPlateWidget(QWidget):
             self.drawPlate()
             self.update()
 
-    def startAnimation(self, possibility):
+    def startAnimation(self, possibility, fromPiece):
         self.isAnimationRunning = True
         self.currentAnimationIndex = 0
         self.currentAnimationPossibility = possibility
-        self.currentAnimationOldPos = self.pieceSelected
+        self.currentAnimationOldPos = fromPiece
         self.doAnimation()
 
     def doAnimation(self):
