@@ -11,7 +11,8 @@ class Game:
 
     def __init__(self, plate, container):
         self.plate = plate
-        self.turnJ1 = False
+        self.turnJ1 = True
+        self.Ai = True
         self.clickablePieces = []
         self.nbPiecesJ1 = 12
         self.nbPiecesJ2 = 12
@@ -71,6 +72,9 @@ class Game:
 
     def isTurnJ1(self):
         return self.turnJ1
+
+    def isAi(self):
+        return self.Ai
 
     def setPlate(self, plate):
         self.plate = plate
