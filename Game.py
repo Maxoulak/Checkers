@@ -12,7 +12,7 @@ class Game:
     def __init__(self, plate, container):
         self.plate = plate
         self.turnJ1 = True
-        self.Ai = False
+        self.Ai = True
         self.clickablePieces = []
         self.nbPiecesJ1 = 12
         self.nbPiecesJ2 = 12

@@ -8,11 +8,17 @@ class AiPlayer:
     def setRate(self):
         print(self.game.getClickablePieces())
         for clickablePiece in self.game.clickablePieces:
-            print(clickablePiece.piecePosition)
+            self.setRateClickablePiece(clickablePiece)
             for pos in clickablePiece.getPossibilities():
-                self.rate.append(pos.getPos(), )
+                self.rate.append(pos)
                 print(pos.getPos())
+        self.rate = []
+
     def play(self):
         print("Je joue!")
         self.setRate()
-        return
+
+    def setRateClickablePiece(self, clickablePiece):
+        print(self.game.plate[clickablePiece.piecePosition.y()][clickablePiece.piecePosition.x()])
+        print(clickablePiece.piecePosition.x())
+        print(clickablePiece.piecePosition.y())
