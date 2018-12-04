@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QPoint, QTime, QTimer
 from PyQt5.QtWidgets import QMessageBox
 
+from AI.Ai import AiPlayer
 from ClickablePiece import ClickablePiece
 from Possibility import Possibility
 from Square import Square
@@ -10,11 +11,12 @@ class Game:
     NB_PIECE_PER_PLAYER = 12
 
     def __init__(self, plate, container):
-        self.Ai = False
+        self.Ai = True
         self.container = container
         self.initGameVariables(plate)
 
     def initGameVariables(self, plate):
+        self.ai = AiPlayer(self)
         self.setPlate(plate)
         self.turnJ1 = True
         self.clickablePieces = []
@@ -32,6 +34,9 @@ class Game:
         self.turnJ1 = False if self.turnJ1 else True
         self.setClickablePieces()
         self.container.updateUI()
+        if self.isAi() and not self.isTurnJ1():
+            self.ai.play()
+            self.toggleTurn()
 
     def launchGame(self):
         self.gameRunning = True

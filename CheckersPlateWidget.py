@@ -38,7 +38,6 @@ class CheckersPlateWidget(QWidget):
             self.game.setPlate(self.plate)
         else:
             self.game = Game(self.plate, self.container)
-        self.ai = AiPlayer(self.game)
         self.initUI()
 
     def restartGame(self):
@@ -103,9 +102,6 @@ class CheckersPlateWidget(QWidget):
                     posY = y * self.squareDimension + self.MARGIN_CROWN
                     width = self.squareDimension - 2 * self.MARGIN_CROWN
                     self.drawPieceFromFile(posX, posY, width, "./icons/crown")
-        if self.game.isAi() and not self.game.isTurnJ1():
-            self.ai.play()
-            self.game.toggleTurn()
         self.update()
 
 
