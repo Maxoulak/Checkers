@@ -100,7 +100,7 @@ class Game:
             for x in range(0, self.NB_PLATE_SQUARES):
                 square = self.plate[y][x]
                 if square["player"] == player:
-                    clickablePiece = ClickablePiece(QPoint(x, y))
+                    clickablePiece = ClickablePiece(QPoint(x, y), square["queen"])
                     clickablePiece.setPossibilities(self.searchPossibility(QPoint(x, y)))
                     if clickablePiece.getNbPossibilities() > 0:
                         self.clickablePieces.append(clickablePiece)
@@ -129,7 +129,10 @@ class Game:
 
     def checkSimpleMove(self, move):
         if self.isValidSquare(move) and self.isEmptySquare(move):
-            return [Possibility(move, 0, [], [move])]
+            possibility = Possibility(move, 0, [], [move])
+            if self.checkGonnaBeQueen(move):
+                possibility.gonnaBeQueen()
+            return [possibility]
         return []
 
     def checkHungryMove(self, piece, possibility, isQueen):
@@ -139,10 +142,12 @@ class Game:
         inc = int(len(potentialMoves) / 2)
         while i < inc:
             eatPos = potentialMoves[i]
-            currentPossibility = Possibility(potentialMoves[i + inc], possibility.getNbPiecesEat(),
-                                         list(possibility.getPosPiecesEat()), list(possibility.getPieceMoves()))
             if self.isValidSquare(eatPos) and self.canBeEat(eatPos):
                 if self.isValidSquare(potentialMoves[i + inc]) and self.isEmptySquare(potentialMoves[i + inc]):
+                    currentPossibility = Possibility(potentialMoves[i + inc], possibility.getNbPiecesEat(),
+                                                     list(possibility.getPosPiecesEat()), list(possibility.getPieceMoves()))
+                    if self.checkGonnaBeQueen(potentialMoves[i + inc]):
+                        currentPossibility.gonnaBeQueen()
                     currentPossibility.addNbPiecesEat()
                     currentPossibility.posPiecesEat.append(eatPos)
                     currentPossibility.pieceMoves.append(potentialMoves[i + inc])
@@ -179,9 +184,14 @@ class Game:
             self.checkQueen(dest, plate)
 
     def checkQueen(self, position, plate):
+        if self.checkGonnaBeQueen(position):
+            plate[position.y()][position.x()]["queen"] = True
+
+    def checkGonnaBeQueen(self, position):
         requiredX = 0 if self.isTurnJ1() else self.NB_PLATE_SQUARES - 1
         if position.x() == requiredX:
-            plate[position.y()][position.x()]["queen"] = True
+            return True
+        return False
 
     def getPotentialMovesForPlayer(self, piece, isQueen):
         x = piece.x()

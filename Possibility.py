@@ -6,6 +6,7 @@ class Possibility:
         self.rate = 0
         self.posPiecesEat = posPiecesEat
         self.pieceMoves = pieceMoves
+        self.pieceGonnaBeQueen = False
 
     # DEBUG PURPOSE
     def __str__(self):
@@ -19,6 +20,9 @@ class Possibility:
 
     def addNbPiecesEat(self):
         self.nbPiecesEat += 1
+
+    def gonnaBeQueen(self):
+        self.pieceGonnaBeQueen = True
 
     def getRate(self):
         return self.rate
@@ -34,3 +38,6 @@ class Possibility:
 
     def getPieceMoves(self):
         return self.pieceMoves
+
+    def isGonnaBeQueen(self):
+        return self.pieceGonnaBeQueen

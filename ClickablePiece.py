@@ -1,8 +1,9 @@
 class ClickablePiece:
 
-    def __init__(self, pos):
+    def __init__(self, pos, queen):
         self.piecePosition = pos
         self.possibilities = []
+        self.queen = queen
 
     def setPossibilities(self, possibilities):
         self.possibilities = possibilities
@@ -21,3 +22,6 @@ class ClickablePiece:
 
     def hasPossibilities(self):
         return True if len(self.possibilities) > 0 else False
+
+    def isQueen(self):
+        return self.queen
