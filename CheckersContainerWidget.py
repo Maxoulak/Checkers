@@ -48,9 +48,9 @@ class CheckersContainerWidget(QWidget):
                                                  self.checkersPlateWidget.getGame().getTimeSecJ2()))
 
     def createPlayerGroupBox(self, player, playerRemainingPieces, playerEatPieces, playerTimer):
-        title = "Player 1 (White)"
+        title = "Player 1 (Black)"
         if player == 2:
-            title = "Player 2 (Black)"
+            title = "Player 2 (White)"
         groupBox = QGroupBox(title)
         groupBox.setFixedSize(300, 200)
         layout = QGridLayout()

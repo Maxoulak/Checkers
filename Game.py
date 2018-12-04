@@ -167,17 +167,17 @@ class Game:
             self.checkQueen(dest, plate)
 
     def checkQueen(self, position, plate):
-        requiredX = self.NB_PLATE_SQUARES - 1 if self.isTurnJ1() else 0
+        requiredX = 0 if self.isTurnJ1() else self.NB_PLATE_SQUARES - 1
         if position.x() == requiredX:
             plate[position.y()][position.x()]["queen"] = True
 
     def getPotentialMovesForPlayer(self, piece, isQueen):
         x = piece.x()
         y = piece.y()
-        potentialMovesFirstJ1 = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1)]
-        potentialMovesSecondJ1 = [QPoint(x + 2, y - 2), QPoint(x + 2, y + 2)]
-        potentialMovesFirstJ2 = [QPoint(x - 1, y - 1), QPoint(x - 1, y + 1)]
-        potentialMovesSecondJ2 = [QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
+        potentialMovesFirstJ1 = [QPoint(x - 1, y - 1), QPoint(x - 1, y + 1)]
+        potentialMovesSecondJ1 = [QPoint(x - 2, y - 2), QPoint(x - 2, y + 2)]
+        potentialMovesFirstJ2 = [QPoint(x + 1, y - 1), QPoint(x + 1, y + 1)]
+        potentialMovesSecondJ2 = [QPoint(x + 2, y - 2), QPoint(x + 2, y + 2)]
         potentialMoves = potentialMovesFirstJ1 + potentialMovesSecondJ1
         if not self.isTurnJ1():
             potentialMoves = potentialMovesFirstJ2 + potentialMovesSecondJ2

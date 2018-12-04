@@ -55,11 +55,11 @@ class CheckersPlateWidget(QWidget):
                 elif x < 3:
                     self.plate[y][x]["square"] = Square.BLACK
                     self.plate[y][x]["piece"] = Square.WHITE
-                    self.plate[y][x]["player"] = 1
+                    self.plate[y][x]["player"] = 2
                 elif x > 4:
                     self.plate[y][x]["square"] = Square.BLACK
                     self.plate[y][x]["piece"] = Square.BLACK
-                    self.plate[y][x]["player"] = 2
+                    self.plate[y][x]["player"] = 1
                 else:
                     self.plate[y][x]["square"] = Square.BLACK
                     self.plate[y][x]["piece"] = Square.EMPTY
@@ -83,7 +83,7 @@ class CheckersPlateWidget(QWidget):
                     posY = y * self.squareDimension + self.MARGIN_CROWN
                     width = self.squareDimension - 2 * self.MARGIN_CROWN
                     self.drawPieceFromFile(posX, posY, width, "./icons/crown")
-        if self.game.isAi() and not self.game.turnJ1:
+        if self.game.isAi() and not self.game.isTurnJ1():
             self.ai.play()
             self.game.toggleTurn()
         self.update()
@@ -197,7 +197,7 @@ class CheckersPlateWidget(QWidget):
 
     def checkWin(self):
         if self.checkLoose():
-            player = "Black" if self.game.isTurnJ1() else "White"
+            player = "White" if self.game.isTurnJ1() else "Black"
             self.game.stopGame()
             QMessageBox.about(self, "Win", "Player " + player + " won !")
 
