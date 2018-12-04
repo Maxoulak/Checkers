@@ -83,7 +83,7 @@ class CheckersPlateWidget(QWidget):
                     posY = y * self.squareDimension + self.MARGIN_CROWN
                     width = self.squareDimension - 2 * self.MARGIN_CROWN
                     self.drawPieceFromFile(posX, posY, width, "./icons/crown")
-        if self.game.isAi and not self.game.turnJ1:
+        if self.game.isAi() and not self.game.turnJ1:
             self.ai.play()
             self.game.toggleTurn()
         self.update()
