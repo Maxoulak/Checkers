@@ -14,6 +14,7 @@ from Square import Square
 class CheckersPlateWidget(QWidget):
     MARGIN = 10
     MARGIN_CROWN = 25
+    TIMER_AI_TURN_MS = 150
 
     def __init__(self, size, container):
         super().__init__()
@@ -138,7 +139,7 @@ class CheckersPlateWidget(QWidget):
         canvasPainter.drawImage(self.rect(), self.image, self.image.rect())
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton and not self.isAnimationRunning:
+        if event.button() == Qt.LeftButton and not self.isAnimationRunning and not self.game.isTurnAI():
             x, y = self.getSelectedSquare(event)
             pos = QPoint(x, y)
             # Case cliquée + Clique sur une possibilité
@@ -167,7 +168,10 @@ class CheckersPlateWidget(QWidget):
         self.currentAnimationIndex = 0
         self.currentAnimationPossibility = possibility
         self.currentAnimationOldPos = fromPiece
-        self.doAnimation()
+        if not self.game.isTurnAI():
+            self.doAnimation()
+        else:
+            QTimer.singleShot(self.TIMER_AI_TURN_MS, self.doAnimation)
 
     def doAnimation(self):
         possibility = self.currentAnimationPossibility
@@ -183,11 +187,11 @@ class CheckersPlateWidget(QWidget):
             self.update()
             if self.currentAnimationIndex >= len(possibility.getPieceMoves()):
                 self.game.removePieces(possibility.getNbPiecesEat())
-                self.game.toggleTurn()
                 self.isAnimationRunning = False
                 self.currentAnimationPossibility = None
                 self.currentAnimationIndex = 0
-                self.checkWin()
+                if not self.checkWin():
+                    self.game.toggleTurn()
             else:
                 QTimer.singleShot(500, self.doAnimation)
 
@@ -208,6 +212,8 @@ class CheckersPlateWidget(QWidget):
             player = "White" if self.game.isTurnJ1() else "Black"
             self.game.stopGame()
             QMessageBox.about(self, "Win", "Player " + player + " won !")
+            return True
+        return False
 
     def checkLoose(self):
         player = 1 if self.game.isTurnJ1() else 2

@@ -8,14 +8,14 @@ class AiPlayer:
         self.game = game
 
     def setRate(self):
-        print(self.game.getClickablePieces())
+        #print(self.game.getClickablePieces())
         self.rate = []
         for clickablePiece in self.game.clickablePieces:
             self.ifCanBeEat(clickablePiece)
             for pos in clickablePiece.getPossibilities():
                 self.rate.append(pos)
-                print(pos.getPos())
-                print(pos.getRate())
+                #print(pos.getPos())
+                #print(pos.getRate())
 
     def play(self):
         print("Je joue!")
@@ -23,15 +23,15 @@ class AiPlayer:
         tmpMove = self.rate[0]
         shuffle = True
         for move in self.rate:
-            print("je passe")
-            print(move)
+            #print("je passe")
+            #print(move)
             if move.getRate() > tmpMove.getRate():
                 shuffle = False
                 tmpMove = move
-        print("ok")
+        #print("ok")
         try:
-            self.game.movePiece(tmpMove.getSrc(), tmpMove.getPos(), self.game.plate, True)
-            #self.game.container.checkersPlateWidget.startAnimation(tmpMove, tmpMove.getSrc())
+            #self.game.movePiece(tmpMove.getSrc(), tmpMove.getPos(), self.game.plate, True)
+            self.game.container.checkersPlateWidget.startAnimation(tmpMove, tmpMove.getSrc())
         except Exception as e:
             print(e)
 
