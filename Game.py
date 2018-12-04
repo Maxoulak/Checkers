@@ -117,14 +117,14 @@ class Game:
         possibleMoves = self.getPotentialMovesForPlayer(piece, isQueen)
         inc = int(len(possibleMoves) / 2)
         while i < inc:
-            possibilities += self.checkSimpleMove(possibleMoves[i])
+            possibilities += self.checkSimpleMove(possibleMoves[i], piece)
             i += 1
-        possibilities += self.checkHungryMove(piece, Possibility(QPoint(-1, -1), 0, [], []), isQueen)
+        possibilities += self.checkHungryMove(piece, Possibility(QPoint(-1, -1), 0, [], [], piece), isQueen)
         return possibilities
 
-    def checkSimpleMove(self, move):
+    def checkSimpleMove(self, move, piece):
         if self.isValidSquare(move) and self.isEmptySquare(move):
-            return [Possibility(move, 0, [], [move])]
+            return [Possibility(move, 0, [], [move], piece)]
         return []
 
     def checkHungryMove(self, piece, possibility, isQueen):
@@ -135,7 +135,7 @@ class Game:
         while i < inc:
             eatPos = potentialMoves[i]
             currentPossibility = Possibility(potentialMoves[i + inc], possibility.getNbPiecesEat(),
-                                         list(possibility.getPosPiecesEat()), list(possibility.getPieceMoves()))
+                                         list(possibility.getPosPiecesEat()), list(possibility.getPieceMoves()), possibility.getSrc())
             if self.isValidSquare(eatPos) and self.canBeEat(eatPos):
                 if self.isValidSquare(potentialMoves[i + inc]) and self.isEmptySquare(potentialMoves[i + inc]):
                     currentPossibility.addNbPiecesEat()

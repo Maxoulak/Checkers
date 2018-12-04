@@ -1,11 +1,12 @@
 # Rate : int between 1 and 100
 class Possibility:
-    def __init__(self, piece, nbPiecesEat, posPiecesEat, pieceMoves):
+    def __init__(self, piece, nbPiecesEat, posPiecesEat, pieceMoves, src):
         self.piecePosition = piece
         self.nbPiecesEat = nbPiecesEat
         self.rate = 0
         self.posPiecesEat = posPiecesEat
         self.pieceMoves = pieceMoves
+        self.src = src
 
     # DEBUG PURPOSE
     def __str__(self):
@@ -34,3 +35,6 @@ class Possibility:
 
     def getPieceMoves(self):
         return self.pieceMoves
+
+    def getSrc(self):
+        return self.src
