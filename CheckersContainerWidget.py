@@ -11,9 +11,9 @@ class CheckersContainerWidget(QWidget):
         self.checkersPlateWidget = CheckersPlateWidget(size, self)
         self.NB_PIECE_PER_PLAYER = self.checkersPlateWidget.getGame().NB_PIECE_PER_PLAYER
 
-        self.initUI(size)
+        self.initUI()
 
-    def initUI(self, size):
+    def initUI(self):
         self.player1RemainingPieces = QLabel(str(self.NB_PIECE_PER_PLAYER))
         self.player2RemainingPieces = QLabel(str(self.NB_PIECE_PER_PLAYER))
         self.player1EatPieces = QLabel("0")
@@ -33,6 +33,17 @@ class CheckersContainerWidget(QWidget):
         self.mainLayout.addWidget(self.checkersPlateWidget)
         self.mainLayout.addLayout(self.vLayout)
         self.setLayout(self.mainLayout)
+
+    def restartGame(self):
+        self.checkersPlateWidget.getGame().stopGame()
+        self.player1RemainingPieces.setText(str(self.NB_PIECE_PER_PLAYER))
+        self.player2RemainingPieces.setText(str(self.NB_PIECE_PER_PLAYER))
+        self.player1EatPieces.setText("0")
+        self.player2EatPieces.setText("0")
+        self.player1Timer.setText("00:00")
+        self.player2Timer.setText("00:00")
+        self.playerTurn.setText("Player 1's turn")
+        self.checkersPlateWidget.restartGame()
 
     def updateUI(self):
         game = self.checkersPlateWidget.getGame()
