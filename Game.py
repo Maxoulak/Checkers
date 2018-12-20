@@ -36,7 +36,6 @@ class Game:
         self.container.updateUI()
         if self.isAi() and not self.isTurnJ1():
             self.ai.play()
-            self.toggleTurn()
 
     def launchGame(self):
         self.gameRunning = True
@@ -84,6 +83,9 @@ class Game:
 
     def isTurnJ1(self):
         return self.turnJ1
+
+    def isTurnAI(self):
+        return True if not self.isTurnJ1() and self.isAi() else False
 
     def isAi(self):
         return self.Ai
