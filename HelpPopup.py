@@ -1,6 +1,8 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel
 
+# Help Popup Class
+#   Show when shortcut "Ctrl+H" is used or item menu "Help" is clicked
 class HelpPopup(QWidget):
     # Init Method
     #   Init Window's title, width, height and icon

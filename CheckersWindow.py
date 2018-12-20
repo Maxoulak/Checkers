@@ -6,7 +6,14 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QAction, QMessageBox
 from CheckersContainerWidget import CheckersContainerWidget
 from HelpPopup import HelpPopup
 
+
+# Checkers Window Class
+#   Main Class
+#   Init the top menu
+#   Include the checkers widget container
 class CheckersWindow(QMainWindow):
+    # Init Method
+    #   Include the checkers widget container
     def __init__(self):
         super().__init__()
 
@@ -18,6 +25,8 @@ class CheckersWindow(QMainWindow):
 
         self.initMenus()
 
+    # Init UI Method
+    #   Set window's title, size and icon and show it
     def initUI(self):
         self.setWindowTitle("Draughts")
         self.setGeometry(80, 80, 1100, 800)
@@ -25,6 +34,8 @@ class CheckersWindow(QMainWindow):
 
         self.show()
 
+    # Init Menus
+    #   Init the top Menus and their items and shortcuts
     def initMenus(self):
         mainMenu = self.menuBar()
         gameMenu = mainMenu.addMenu(" Game")
@@ -40,7 +51,7 @@ class CheckersWindow(QMainWindow):
         AIAction.setChecked(False)
         AIAction.setShortcut("Ctrl+I")
         gameMenu.addAction(AIAction)
-        AIAction.triggered.connect(self.checkersPlateWidget.toggleAI)
+        AIAction.triggered.connect(self.checkersContainerWidget.toggleAI)
 
         exitAction = QAction(QIcon("./icons/exit.png"), "Quit", self)
         exitAction.setShortcut("Ctrl+Q")
