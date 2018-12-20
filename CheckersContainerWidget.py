@@ -34,6 +34,11 @@ class CheckersContainerWidget(QWidget):
         self.vLayout = QVBoxLayout()
         self.groupBoxPlayer1 = self.createPlayerGroupBox(1, self.player1RemainingPieces, self.player1EatPieces, self.player1Timer)
         self.groupBoxPlayer2 = self.createPlayerGroupBox(2, self.player2RemainingPieces, self.player2EatPieces, self.player2Timer)
+        self.groupBoxPlayer1.setStyleSheet("""
+        QGroupBox::title {
+            color: red;
+            }
+        """)
         self.vLayout.addWidget(self.groupBoxPlayer1)
         self.vLayout.addWidget(self.groupBoxPlayer2)
         self.vLayout.addWidget(self.createToolsGroupBox())
@@ -63,6 +68,16 @@ class CheckersContainerWidget(QWidget):
         self.player1Timer.setText("%02d:%02d" % (self.game.NB_MIN_PER_PLAYER, self.game.NB_SEC_PER_PLAYER))
         self.player2Timer.setText("%02d:%02d" % (self.game.NB_MIN_PER_PLAYER, self.game.NB_SEC_PER_PLAYER))
         self.playerTurn.setText("Player 1's turn")
+        self.groupBoxPlayer1.setStyleSheet("""
+        QGroupBox::title {
+            color: red;
+            }
+        """)
+        self.groupBoxPlayer2.setStyleSheet("""
+        QGroupBox::title {
+            color: black;
+            }
+        """)
         self.checkersPlateWidget.restartGame()
 
     # Update UI
@@ -72,6 +87,28 @@ class CheckersContainerWidget(QWidget):
         self.player2RemainingPieces.setText(str(self.game.getNbPiecesPlayer2()))
         self.player1EatPieces.setText(str(self.game.NB_PIECE_PER_PLAYER - self.game.getNbPiecesPlayer2()))
         self.player2EatPieces.setText(str(self.game.NB_PIECE_PER_PLAYER - self.game.getNbPiecesPlayer1()))
+        if self.game.isTurnJ1():
+            self.groupBoxPlayer1.setStyleSheet("""
+            QGroupBox::title {
+                color: red;
+                }
+            """)
+            self.groupBoxPlayer2.setStyleSheet("""
+            QGroupBox::title {
+                color: black;
+                }
+            """)
+        else:
+            self.groupBoxPlayer1.setStyleSheet("""
+            QGroupBox::title {
+                color: black;
+                }
+            """)
+            self.groupBoxPlayer2.setStyleSheet("""
+            QGroupBox::title {
+                color: red;
+                }
+            """)
 
     # Update Timer UI
     #   Update the timers on the right pannel
